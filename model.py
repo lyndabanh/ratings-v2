@@ -1,6 +1,7 @@
 """Models for movie ratings app."""
 
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 db = SQLAlchemy()
 
@@ -15,13 +16,16 @@ class User(db.Model):
     email = db.Column(db.String, unique=True)
     password = db.Column(db.String)
 
+    # ratings = a list of Rating objects
+
     def __repr__(self):
         """Show user's user_id and email."""
 
         return f'<User user_id={self.user_id} email={self.email}'
 
+
 class Movie(db.Model):
-    ___tablename__ = 'movies'
+    __tablename__ = 'movies'
 
     movie_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     title = db.Column(db.String)
@@ -29,8 +33,31 @@ class Movie(db.Model):
     release_date = db.Column(db.DateTime)
     poster_path = db.Column(db.String)
 
+    # ratings = a list of Rating objects
+    
+
     def __repr__(self):
         return f'<Movie movie_id={self.movie_id} title={self.title}>'
+
+
+class Rating(db.Model):
+
+    __tablename__ = 'ratings'
+
+    rating_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    score = db.Column(db.Integer)
+    movie_id = db.Column(db.Integer, db.ForeignKey('movies.movie_id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
+
+    #test_rating.movie =[<Movie movie_id=1 title='one'>, <Movie movie_id=2 title='two'}>, <Movie movie_id={self.movie_id} title={self.title}>]
+    movie = db.relationship('Movie', backref='ratings')
+
+    #test_rating.user =[list of user objects]
+    user = db.relationship('User', backref='ratings')
+
+    def __repr__ (self):
+        return f'Movie movie_id={self.movie_id} rating={self.score}'
+
 
 def connect_to_db(flask_app, db_uri='postgresql:///ratings', echo=True):
     flask_app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
@@ -43,17 +70,6 @@ def connect_to_db(flask_app, db_uri='postgresql:///ratings', echo=True):
     print('Connected to the db!')
 
 
-class Rating(db.Model):
-
-    __tablename__ = 'ratings'
-
-    rating_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    score = db.Column(db.Integer)
-    movie_id = db.Column(db.Integer, db.ForeignKey('movies.movie_id'))
-    user_id = db.Column(db.Integer, db>foreinKey('users.user_id'))
-
-    def __repr__ (self):
-        return f'Movie movie_id={self.movie_id} rating={self.score}'
 
 if __name__ == '__main__':
     from server import app
